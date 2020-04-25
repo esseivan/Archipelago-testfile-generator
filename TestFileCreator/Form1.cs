@@ -40,8 +40,26 @@ namespace TestFileCreator
 
         private void button1_Click(object sender, EventArgs e)
         {
-            // Début de la génération
-            Generate();
+            if (!isBusy)
+            {
+                // Début de la génération
+                button1.Text = "Cancel";
+                Generate();
+                button1.Text = $"Generate {numericUpDown11.Value}";
+            }
+            else
+            {
+                AskCancellation();
+            }
+        }
+
+        private void AskCancellation()
+        {
+            if (cancelRequested || !isBusy)
+                return;
+
+            if (MessageBox.Show("Confirm the cancellation of the generation\nCancel the generation ?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                cancelRequested = true;
         }
 
         // Récupère le type (housing, production, transport) aléatoiremnt
@@ -486,10 +504,9 @@ namespace TestFileCreator
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Escape && isBusy && !cancelRequested)
+            if (e.KeyCode == Keys.Escape)
             {
-                if (MessageBox.Show("Confirm the cancellation of the generation\nCancel the generation ?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-                    cancelRequested = true;
+                AskCancellation();
             }
         }
     }
