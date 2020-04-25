@@ -23,6 +23,10 @@ namespace TestFileCreator
         // Généateur de random 1
         private readonly Random rnd = new Random();
 
+        // Cancel generation
+        private bool cancelRequested = false;
+        private bool isBusy = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -209,6 +213,8 @@ namespace TestFileCreator
         private void Generate()
         {
             Cursor = Cursors.WaitCursor;
+            cancelRequested = false;
+            isBusy = true;
 
             string filePath;
 
@@ -234,8 +240,8 @@ namespace TestFileCreator
             int genCount = (int)numericUpDown11.Value;
 
             // Génération de 'gencount' fichiers
-
-            for (int k = 0; k < genCount; k++)
+            int k;
+            for (k = 0; k < genCount; k++)
             {
                 Random rnd2 = new Random();
 
@@ -333,13 +339,25 @@ namespace TestFileCreator
                 File.WriteAllText(filePath, text);
                 ;
 
+                // Cancellation
+                if (cancelRequested)
+                {
+                    lblInfo.Text = "Cancelled";
+                    break;
+                }
+
             }
 
-            lblInfo.Text = "Idle";
+            if (!cancelRequested)
+            {
+                lblInfo.Text = "Idle";
+                k--;
+            }
 
+            isBusy = false;
             Cursor = Cursors.Default;
 
-            MessageBox.Show($"Generation complete !\n{genCount} files created at :\n'{path}'", "Information");
+            MessageBox.Show($"Generation complete !\n{k + 1} files created at :\n'{path}'", "Information");
         }
 
         private string GenerateText(IEnumerable<Node> nodes, IEnumerable<Link> links)
@@ -464,6 +482,15 @@ namespace TestFileCreator
         private void numericUpDown11_ValueChanged(object sender, EventArgs e)
         {
             button1.Text = $"Generate ({numericUpDown11.Value})";
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape && isBusy && !cancelRequested)
+            {
+                if (MessageBox.Show("Confirm the cancellation of the generation\nCancel the generation ?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    cancelRequested = true;
+            }
         }
     }
 }
